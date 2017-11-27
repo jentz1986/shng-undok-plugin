@@ -86,7 +86,10 @@ class FSAPI(object):
         return objectify.fromstring(r.content)
 
     def __del__(self):
-        self._call('DELETE_SESSION')
+        try:
+            self._call('DELETE_SESSION')
+        except TypeError:
+            pass
 
     # Read-only ###################################################################################
 
