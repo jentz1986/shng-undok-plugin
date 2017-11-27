@@ -13,17 +13,20 @@
 # limitations under the License.
 
 import socket
-import httplib
-import StringIO
+import http.client
+from io import StringIO
 
 
 class SSDPResponse(object):
-    class _FakeSocket(StringIO.StringIO):
+    class _FakeSocket(StringIO):
         def makefile(self, *args, **kw):
             return self
 
+        def readline(self, n):
+            return StringIO.readline(self, n).encode('utf-8')
+
     def __init__(self, response):
-        r = httplib.HTTPResponse(self._FakeSocket(response))
+        r = http.client.HTTPResponse(self._FakeSocket(response.decode()))
         r.begin()
         self.location = r.getheader("location")
         self.usn = r.getheader("usn")
@@ -51,7 +54,7 @@ def discover(service, timeout=10, retries=1, limit=1):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-        sock.sendto(message.format(*group, st=service), group)
+        sock.sendto(message.format(*group, st=service).encode('utf-8'), group)
 
         while True:
             if len(responses) >= limit:
@@ -63,4 +66,4 @@ def discover(service, timeout=10, retries=1, limit=1):
             except socket.timeout:
                 break
 
-    return responses.values()
+    return list(responses.values())
