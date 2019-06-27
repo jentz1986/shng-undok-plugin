@@ -14,21 +14,19 @@
 
 import requests
 from lxml import objectify
+from lxml.etree import XMLSyntaxError
 
 
 class FSAPI(object):
     RW_MODES = {
         0: 'internet',
         1: 'spotify',
-        2: 'music',
-        3: 'dab',
-        4: 'fm',
-        5: 'aux',
-    }
-
-    RO_MODES = {
-        6: 'dmr',
-        7: 'network',
+        2: 'local_music',
+        3: 'music',
+        4: 'dab',
+        5: 'fm',
+        6: 'bluetooth',
+        7: 'aux',
     }
 
     PLAY_STATES = {
@@ -68,7 +66,7 @@ class FSAPI(object):
         doc = self._call('CREATE_SESSION')
         return doc.sessionId.text
 
-    def _call(self, path, extra=None):
+    def _call(self, path, extra=None, return_string=False):
         if not self._webfsapi:
             raise Exception('No server found')
 
@@ -83,7 +81,10 @@ class FSAPI(object):
         params.update(**extra)
 
         r = requests.get('%s/%s' % (self._webfsapi, path), params=params)
-        return objectify.fromstring(r.content)
+        if return_string:
+            return r.content
+        else:
+            return objectify.fromstring(r.content)
 
     def __del__(self):
         try:
@@ -132,13 +133,43 @@ class FSAPI(object):
 
     @property
     def notifications(self):
-        doc = self._call('GET_NOTIFIES')
-        if doc.status != 'FS_OK':
+        try:
+            doc = self._call('GET_NOTIFIES')
+            if doc.status != 'FS_OK':
+                return None
+            return {
+                'node': doc.notify.get('node'),
+                'value': list(doc.notify.value.iterchildren()).pop(),
+            }
+        except XMLSyntaxError:
             return None
-        return {
-            'node': doc.notify.get('node'),
-            'value': list(doc.notify.value.iterchildren()).pop(),
-        }
+
+    @property
+    def valid_modes(self):
+        doc = self._call('LIST_GET_NEXT/netRemote.sys.caps.validModes/-1', dict(maxItems=100))
+
+        if not doc.status == 'FS_OK':
+            return None
+
+        ret = list()
+        for index, item in enumerate(list(doc.iterchildren('item'))):
+            temp = dict(index=index)
+            skip = False
+            for field in list(item.iterchildren()):
+                fn = field.get('name')
+                ct = list(field.iterchildren()).pop()
+                if fn == 'selectable':
+                    if ct == 0:
+                        skip = True
+                elif fn == 'modetype':
+                    continue
+                else:
+                    temp[fn] = ct
+
+            if not skip:
+                ret.append(temp)
+
+        return ret
 
     # Read-write ##################################################################################
 
@@ -189,8 +220,11 @@ class FSAPI(object):
 
     def _get_mode(self):
         doc = self._call('GET/netRemote.sys.mode')
+
+        print(doc.value.u32)
+
         modes = self.RW_MODES
-        modes.update(self.RO_MODES)
+        # modes.update(self.RO_MODES)
         return modes.get(doc.value.u32)
 
     def _set_mode(self, value):
