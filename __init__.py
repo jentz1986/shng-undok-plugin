@@ -457,3 +457,31 @@ class UndokClient(SmartPlugin):
         self.logger.debug(f"Selecting preset {preset}")
         self.perform_or_unblock_and_retry(do_select_preset)
         self.logger.debug(f"Selected preset {preset}")
+
+    def get_multiroom_peers_from_friendly_names(self, friendly_names):
+        all_peers = self._model._api.multiroom_peers
+        requested_peers = []
+
+        for peer in all_peers:
+            if peer["friendlyname"] in friendly_names:
+                requested_peers.append(peer)
+
+        return requested_peers
+
+    def create_multiroom_group(self, name, peers):
+        def do_create_multiroom_group():
+            self._model._api.create_multiroom_group(name)
+            for peer in peers:
+                self._model._api.add_multiroom_client(peer["udn"])
+            
+        self.logger.debug(f"create_multiroom_group {name}")
+        self.perform_or_unblock_and_retry(do_create_multiroom_group)
+        self.logger.debug(f"created_multiroom_group {name}")
+
+    def destroy_multiroom_group(self):
+        def do_destroy_multiroom_group():
+            self._model._api.destroy_multiroom_group()
+            
+        self.logger.debug(f"destroy_multiroom_group")
+        self.perform_or_unblock_and_retry(do_destroy_multiroom_group)
+        self.logger.debug(f"destroyed_multiroom_group")
