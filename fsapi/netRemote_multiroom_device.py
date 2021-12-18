@@ -1,7 +1,7 @@
 from .fsapi_node import *
 
 
-@FSAPI_Node('list')
+@FSAPI_Node('list', 'multiroom_peers')
 class FSAPI_Node_Multiroom_Device_ListAll(object):
     key = 'netRemote.multiroom.device.listAll'
     max_age = 30
