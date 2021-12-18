@@ -1,0 +1,251 @@
+# Metadata for the plugin
+plugin:
+    # Global plugin attributes
+    type: interface                   # plugin type (gateway, interface, protocol, system, web)
+    description:
+        de: 'Plugin um Undok Radios fernzusteuern'
+        en: 'Plugin to read and control some features of Undok radios'
+    maintainer: jentz1986
+#    tester: Onkelandy                        # Who tests this plugin?
+    state: develop                  # change to ready when done with development
+    keywords: media dab radio streaming
+#    documentation: https://github.com/smarthomeNG/smarthome/wiki/CLI-Plugin        # url of documentation (wiki) page
+    support: https://knx-user-forum.de/forum/supportforen/smarthome-py/1375720-plugin-frontier-silicon-api-undok-z-b-technisat-digitradio-lidl-silvercrest
+
+    version: 1.6.1                  # Plugin version
+    sh_minversion: 1.6              # minimum shNG version to use this plugin
+#    sh_maxversion:                  # maximum shNG version to use this plugin (leave empty if latest)
+    multi_instance: True           # plugin supports multi instance
+    restartable: True
+    classname: UndokClient         # class containing the plugin
+
+parameters:
+    # Definition of parameters to be configured in etc/plugin.yaml (enter 'parameters: NONE', if section should be empty)
+    undok_device_url:
+        type: str
+        mandatory: True
+        default: ''
+        description:
+            de: 'Basis URL des Geräts, z.B. https://unifi:8443'
+            en: 'Base URL of the device, e.g. https://unifi:8443'
+    
+    undok_pin:
+        type: str
+        mandatory: True
+        default: '1234'
+        description:
+            de: 'PIN to authenticate at device'
+            en: 'PIN to authenticate at device'
+    
+    poll_cycle_time:
+        type: int
+        default: 0
+        description:
+            de: '(optional) Zeit zwischen zwei Updateläufen. Default ist 0 Sekunden = aus.'
+            en: '(optional) Time period between two update cycles. Default is 0 seconds = off.'
+    
+    listen_to_notifications:
+        type: bool
+        default: False
+        description:
+            de: '(optional) ABC'
+            en: '(optional) CDE'
+    
+item_attributes: 
+    # Definition of item attributes defined by this plugin (enter 'item_attributes: NONE', if section should be empty)
+    undok_type:
+        type: str
+        mandatory: True
+        description:
+            de: 'Undok Datentyp des jeweiligen Items.'
+            en: 'Undok Data Type of the respective item.'
+        valid_list:
+            - 'power'
+            - 'friendly_name'
+            - 'radio_id'
+            - 'version'
+            - 'mode_key'
+            - 'sleep_timer'
+            - 'valid_modes'
+            - 'volume_steps'
+            - 'volume_percent'
+            - 'mute'
+            - 'volume'
+            - 'play_info_name'
+            - 'play_info_album'
+            - 'play_info_artist'
+            - 'play_info_duration'
+            - 'play_info_graphicuri'
+            - 'play_info_text'
+            - 'play_position'
+            - 'play_rate'
+            - 'play_repeat'
+            - 'play_scrobble'
+            - 'play_shuffle'
+            - 'play_status'
+            - 'play_control'
+
+
+item_structs: 
+    power_only:
+        type: bool
+        undok_type@instance: power
+    
+    power_mode_volume:
+        mode_key:
+            type: num
+            undok_type@instance: mode_key
+        valid_modes:
+            type: list
+            undok_type@instance: valid_modes
+            cache: yes
+        mute:
+            type: bool
+            undok_type@instance: mute
+        volume_percent:
+            type: num
+            undok_type@instance: volume_percent
+            
+            volume_set:
+                type: num
+                undok_type@instance: volume
+                
+            volume_steps:
+                type: num
+                undok_type@instance: volume_steps
+                cache: yes
+
+
+    device:
+        type: bool
+        undok_type@instance: power
+        
+        friendly_name:
+            type: str
+            undok_type@instance: friendly_name
+            cache: yes
+        radio_id:
+            type: str
+            undok_type@instance: radio_id
+            cache: yes
+        version:
+            type: str
+            undok_type@instance: version
+            cache: yes
+        mode_key:
+            type: num
+            undok_type@instance: mode_key
+        sleep_timer:
+            type: num
+            undok_type@instance: sleep_timer
+        valid_modes:
+            type: list
+            undok_type@instance: valid_modes
+            cache: yes
+        mute:
+            type: bool
+            undok_type@instance: mute
+        volume_percent:
+            type: num
+            undok_type@instance: volume_percent
+            
+            volume_set:
+                type: num
+                undok_type@instance: volume
+                
+            volume_steps:
+                type: num
+                undok_type@instance: volume_steps
+                cache: yes
+                
+        play_info_name:
+            type: str
+            undok_type@instance: play_info_name
+        play_info_album:
+            type: str
+            undok_type@instance: play_info_album
+        play_info_artist:
+            type: str
+            undok_type@instance: play_info_artist
+        play_info_duration:
+            type: num
+            undok_type@instance: play_info_duration
+        play_info_graphicuri:
+            type: str
+            undok_type@instance: play_info_graphicuri
+        play_info_text:
+            type: str
+            undok_type@instance: play_info_text
+        play_position:
+            type: num
+            undok_type@instance: play_position
+        play_rate:
+            type: num
+            undok_type@instance: play_rate
+        play_repeat:
+            type: num
+            undok_type@instance: play_repeat
+        play_scrobble:
+            type: num
+            undok_type@instance: play_scrobble
+        play_shuffle:
+            type: num
+            undok_type@instance: play_shuffle
+        play_status:
+            type: str
+            undok_type@instance: play_status
+        play_control:
+            type: str
+            undok_type@instance: play_control
+
+
+plugin_functions:
+    # Definition of plugin functions defined by this plugin (enter 'plugin_functions: NONE', if section should be empty)
+    set_power:
+        type: void
+        description:
+            de: "Schaltet das Gerät an bzw. aus"
+            en: "Switches on or off"
+        parameters:
+            to_state:
+                type: bool
+                description:
+                    de: "True = an, False = aus"
+                    en: "True = on, False = off"
+    set_mode:
+        type: void
+        description:
+            de: "Schaltet das Gerät in den entsprechenden Modus"
+            en: "Switches device's mode"
+        parameters:
+            to_mode:
+                type: str
+                description:
+                    de: "dab"
+                    en: "dab"
+    set_volume:
+        type: void
+        description:
+            de: "Setzt die Lautstärke"
+            en: "Sets volume"
+        parameters:
+            to_mode:
+                type: int
+                description:
+                    de: "Volumen Zahl"
+                    en: "Volume number"
+    select_preset:
+        type: void
+        description:
+            de: "Schaltet das Gerät auf den preset"
+            en: "Switches device's preset"
+        parameters:
+            to_mode:
+                type: int
+                description:
+                    de: "Null-indiziert, also Preset - 1"
+                    en: "dab"
+
+logic_parameters: NONE
+    # Definition of logic parameters defined by this plugin (enter 'logic_parameters: NONE', if section should be empty)
+
