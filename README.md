@@ -1,16 +1,11 @@
 # Frontier Silicon API for Python
 
-Only tested with Agron iNet 3+ and latest firmware.
+Tested with Silvercrest, Hama, Technisat and Auna devices.
 
 ## Example Usage
 
 ```python
-services = ssdp.discover('urn:schemas-frontier-silicon-com:argon_001:fsapi:1')
-if not len(services):
-    print 'No server found on network'
-    sys.exit(1)
-
-fs = FSAPI(services[0].location, 123)
+fs = FSAPI('http://10.149.158.82/device', 1234) # get the IP from your DHCP-Server/Router, 1234 is the default PIN for all my devices.
 
 fs.volume = 12
 fs.mode = 'dab'
